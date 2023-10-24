@@ -30,9 +30,11 @@ class DragDoc {
       content.style[s] = imgStyle[s];
     });
     
-    var transformVal = content.style.transform;
-    if (transformVal.length > 0) {
-      var zoomVal = transformVal.replace(/scale\(([0-9\.]+)\)/,'$1');
+    if (content.style.transform.length  == 0) {
+      content.style.transform = 'scale(1)';
+    }
+    
+    var zoomVal = content.style.transform.replace(/scale\(([0-9\.]+)\)/,'$1');
       
       var zoomControl = document.getElementById(this.DOCID + '_zoomcontrol');
       var zoomDisplay = document.getElementById(this.DOCID + '_zoomdisplay');
@@ -40,7 +42,7 @@ class DragDoc {
       zoomControl.value = zoomVal;
 
       zoomDisplay.textContent = parseInt(parseFloat(zoomVal)*100).toString() + '%';
-    }
+    
 
     this.mouseDown = false;
     this.pos = { top: 0, left: 0, x: 0, y: 0 };
