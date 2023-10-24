@@ -13,6 +13,10 @@ Usage:
 class DragDoc {
   constructor(id) {
     this.DOC = document.getElementById(id);
+
+    this.DOC.style.left = "0px";
+    this.DOC.style.top = "0px";
+    
     this.mouseDown = false;
     this.pos = { top: 0, left: 0, x: 0, y: 0 };
     document.addEventListener('mousedown',this.mouseDownHandler.bind(this),false);
@@ -22,17 +26,19 @@ class DragDoc {
 
   mouseDownHandler(e) {
     if (!this.mouseDown) {
+      var left = parseInt(this.DOC.style.left.replace(/px$/,''));
+      var top = parseInt(this.DOC.style.top.replace(/px$/,''));
+      
       this.pos = {
           // The current scroll
-          left: this.DOC.scrollLeft,
-          top: this.DOC.scrollTop,
+          left: left,
+          top: top,
           // Get the current mouse position
           x: e.clientX,
           y: e.clientY,
       };
-    
+
       this.DOC.style.cursor = 'grabbing';
-      this.DOC.style.userSelect = 'none';
     
       this.mouseDown = true;
     }
@@ -44,15 +50,14 @@ class DragDoc {
       const dy = e.clientY - this.pos.y;
   
       // Scroll the element
-      this.DOC.scrollTop = this.pos.top - dy;
-      this.DOC.scrollLeft = this.pos.left - dx;
+      this.DOC.style.top = (this.pos.top + dy).toString() + "px";
+      this.DOC.style.left = (this.pos.left + dx).toString() + "px";
     }
   }
   
   mouseUpHandler(e) {
     if (this.mouseDown) {
       this.DOC.style.cursor = 'grab';
-      this.DOC.style.removeProperty('user-select');
       
       this.mouseDown = false;
     }
