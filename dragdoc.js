@@ -4,7 +4,11 @@ Make content within a DOM container dragable
 
 Usage:
 
-  <div id="content"></div>
+  <div style="position:relative;overflow:hidden;clear:both;">
+			<div id="content" style="cursor:grab;overflow:hidden;position:absolute">
+				<!--put content here -->
+			</div>
+	</div>
   
   var container = new DragDoc('content');
 
