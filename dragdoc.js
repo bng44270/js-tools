@@ -166,7 +166,7 @@ class DragDoc {
     else if (e.type == 'wheel' && e.target.id == image.id) {
       var zoomValue = parseFloat(content.style.transform.replace(/scale\(([0-9\.]+)\)/, '$1'));
       
-      zoomValue = (e.deltaY > 0) ? zoomValue + 0.1 : zoomValue - 0.1;
+      zoomValue = (e.deltaY > 0) ? zoomValue - 0.1 : zoomValue + 0.1;
 
       if (zoomValue > 0 && zoomValue < 4.1) {
         content.style.transform = 'scale(' + zoomValue.toString() + ')';
