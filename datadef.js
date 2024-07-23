@@ -9,7 +9,11 @@
 	//	DataDef.NumberType
 	//	DataDef.BooleanType
 	
-
+    var people = new DataDef({
+      "name" : DataDef.StringType,
+      "age" : DataDef.NumberType,
+      "town" : DataDef.StringType
+    });
     
     people.insert({
       name: "Bob",
