@@ -4,12 +4,12 @@
   
   Usage:
   
-    //Available data types:  string, number, boolean
-    var people = new DataDef({
-      name:'string',
-      age:'number',
-      town:'string'
-    });
+    //Available data types:  
+	//	DataDef.StringType
+	//	DataDef.NumberType
+	//	DataDef.BooleanType
+	
+
     
     people.insert({
       name: "Bob",
@@ -28,7 +28,15 @@
       age:50,
       town: "Newton"
     });
-    
+
+    //The following insert will throw a SchemaError exception
+    //      Field type mismatch (age expected number but got string)
+    people.insert({
+      name:"Joe",
+      age:"43",
+      town:"Creston"
+    });
+
     //Returns Bob and Jim records
     people.filter(r => 10 > r['age'] % 30 >= 1);
     
@@ -51,6 +59,10 @@ class DataError extends Error {
 }
 
 class DataDef extends Array{
+	static StringType = 'string';
+	static NumberType = 'number';
+	static BooleanType = 'boolean';
+
 	constructor(fields,data) {
 		super();
 		
@@ -76,7 +88,7 @@ class DataDef extends Array{
 			throw new SchemaError("Field already exists (" + field + ")");
 		}
 		else {
-			var fieldTypes = ['number','string','boolean'];
+			var fieldTypes = [DataDef.NumberType,DataDef.StringType,DataDef.BooleanType];
 			
 			if (fieldTypes.indexOf(type) == -1) {
 				throw new SchemaError("Unknown data type (" + fields[fieldNames[i]]  + ")");
@@ -106,13 +118,12 @@ class DataDef extends Array{
 		}
 	}
 	
-	uidToIndex(uid) {
-		return this.map(r => r['uid']).indexOf(uid);
+	primaryKeyToIndex(pkey) {
+		return this.map(r => r['_auto_']).indexOf(pkey);
 	}
 	
- 	getNextUid() {
- 		
-		return (this.length == 0) ? 1 : this.map(r => r['uid']).sort((a,b) => a < b)[0] + 1;
+    getNextPrimaryKey() {
+		return (this.length == 0) ? 1 : this.map(r => r['_auto_']).sort((a,b) => a < b)[0] + 1;
 	}
 	
 	bulkInsert(records) {
@@ -139,24 +150,24 @@ class DataDef extends Array{
 			}
 		}
 		
-		if (Object.keys(record).indexOf('uid') == -1) {
-			record['uid'] = this.getNextUid();
+		if (Object.keys(record).indexOf('_auto_') == -1) {
+			record['_auto_'] = this.getNextPrimaryKey();
 		}
 		
 		this.push(record);
 	}
 	
-	bulkDelete(uidAr) {
-		uidAr.forEach(u => {
-			bulkDelete(u);
+	bulkDelete(pkeyAr) {
+		pkeyAr.forEach(k => {
+			this.delete(k);
 		});
 	}
 	
-	delete(uid) {
-		var recIdx = this.uidToIndex(uid);
+	delete(pkey) {
+		var recIdx = this.primaryKeyToIndex(pkey);
 		
 		if (recIdx == -1) {
-			throw new DataError("Did not find uid (" + uid.toString() + ")");
+			throw new DataError("Did not find primary key (" + pkey.toString() + ")");
 		}
 		else {
 			delete this[recIdx];
