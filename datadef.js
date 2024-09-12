@@ -63,9 +63,9 @@ class DataError extends Error {
 }
 
 class DataDef extends Array{
-	static StringType = 'string';
-	static NumberType = 'number';
-	static BooleanType = 'boolean';
+	static get StringType() { return  'string'; }
+	static get NumberType() { return 'number'; }
+	static get BooleanType() { return 'boolean'; }
 
 	constructor(fields,data) {
 		super();
@@ -122,14 +122,6 @@ class DataDef extends Array{
 		}
 	}
 	
-	primaryKeyToIndex(pkey) {
-		return this.map(r => r['_auto_']).indexOf(pkey);
-	}
-	
-    getNextPrimaryKey() {
-		return (this.length == 0) ? 1 : this.map(r => r['_auto_']).sort((a,b) => a < b)[0] + 1;
-	}
-	
 	bulkInsert(records) {
 		records.forEach(r => {
 			this.insert(r);
@@ -152,10 +144,6 @@ class DataDef extends Array{
 			if (typeof(record[fields[i]]) != this.SCHEMA[fields[i]]) {
 				throw new SchemaError("Field type mismatch (" + fields[i] + " expected " + this.SCHEMA[fields[i]] + " but got " + typeof(record[fields[i]]) + ")");
 			}
-		}
-		
-		if (Object.keys(record).indexOf('_auto_') == -1) {
-			record['_auto_'] = this.getNextPrimaryKey();
 		}
 		
 		this.push(record);
