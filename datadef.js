@@ -41,10 +41,19 @@
       town:"Creston"
     });
 
-    //Returns Bob and Jim records
+	//Query using query function (two-dimensional array of field/value pairs)
+	people.query([["age",33],["age",50]])
+
+	//RegEx may be used with both string and non-string fields
+	people.query([["town",/^N/],["age",/^5[0-9]$/]])
+
+	//Update fields
+	//    First argument is the same as the query function syntax
+	//    Second argument is a object containing updpate field/value pairs
+	people.update([["name",/^P/]],{city : "Cincinnati"})
+
+    //Can also query using standard Array functions (filter, map, etc.)
     people.filter(r => 10 > r['age'] % 30 >= 1);
-    
-    //Returns Bob and Pete records
     people.filter(r => r['town'].match(/^New/)) ;
 */
 
@@ -127,7 +136,62 @@ class DataDef extends Array{
 			this.insert(r);
 		});
 	}
-	
+
+	query(queryArray) {
+		return this.filter(r => {
+			var match = true;
+
+			for (var i = 0; i < queryArray.length; i++) {
+				if (queryArray[i][1] instanceof RegExp) {
+					if (!(r[queryArray[i][0]].toString().match(queryArray[i][1]))) {
+						match = false;
+						break;
+					}
+				}
+				else {
+					if (r[queryArray[i][0]] != queryArray[i][1]) {
+						match = false;
+						break;
+					}
+				}
+				
+			}
+
+			return match;
+		});
+	}
+
+	update(queryArray,updateMap) {
+		this.map((r,rIdx) => {
+			return {i : rIdx, record : r}
+		}).filter(r => {
+			var match = true;
+
+			for (var i = 0; i < queryArray.length; i++) {
+				if (queryArray[i][1] instanceof RegExp) {
+					if (!(r['record'][queryArray[i][0]].toString().match(queryArray[i][1]))) {
+						match = false;
+						break;
+					}
+				}
+				else {
+					if (r['record'][queryArray[i][0]] != queryArray[i][1]) {
+						match = false;
+						break;
+					}
+				}
+				
+			}
+
+			return match;
+		}).forEach(r => {
+			console.log(JSON.stringify(r));
+			Object.keys(updateMap).forEach(f => {
+				this[r['i']][f] = updateMap[f];
+			});
+		});
+	}
+
 	insert(record) {
 		var fields = Object.keys(record);
 		
@@ -149,20 +213,31 @@ class DataDef extends Array{
 		this.push(record);
 	}
 	
-	bulkDelete(pkeyAr) {
-		pkeyAr.forEach(k => {
-			this.delete(k);
+	delete(queryArray) {
+    this.map((r,rIdx) => {
+			return {i : rIdx, record : r}
+		}).filter(r => {
+			var match = true;
+
+			for (var i = 0; i < queryArray.length; i++) {
+				if (queryArray[i][1] instanceof RegExp) {
+					if (!(r['record'][queryArray[i][0]].toString().match(queryArray[i][1]))) {
+						match = false;
+						break;
+					}
+				}
+				else {
+					if (r['record'][queryArray[i][0]] != queryArray[i][1]) {
+						match = false;
+						break;
+					}
+				}
+				
+			}
+
+			return match;
+		}).forEach(r => {
+      delete this[r['i']];
 		});
-	}
-	
-	delete(pkey) {
-		var recIdx = this.primaryKeyToIndex(pkey);
-		
-		if (recIdx == -1) {
-			throw new DataError("Did not find primary key (" + pkey.toString() + ")");
-		}
-		else {
-			delete this[recIdx];
-		}
 	}
 }
