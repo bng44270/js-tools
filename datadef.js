@@ -41,16 +41,16 @@
       town:"Creston"
     });
 
-	//Query using query function (two-dimensional array of field/value pairs)
-	people.query([["age",33],["age",50]])
+    //Query using query function (two-dimensional array of field/value pairs)
+    people.query([["age",33],["age",50]])
 
-	//RegEx may be used with both string and non-string fields
-	people.query([["town",/^N/],["age",/^5[0-9]$/]])
+    //RegEx may be used with both string and non-string fields
+    people.query([["town",/^N/],["age",/^5[0-9]$/]])
 
-	//Update fields
-	//    First argument is the same as the query function syntax
-	//    Second argument is a object containing updpate field/value pairs
-	people.update([["name",/^P/]],{city : "Cincinnati"})
+    //Update fields
+    //    First argument is the same as the query function syntax
+    //    Second argument is a object containing updpate field/value pairs
+    people.update([["name",/^P/]],{city : "Cincinnati"})
 
     //Can also query using standard Array functions (filter, map, etc.)
     people.filter(r => 10 > r['age'] % 30 >= 1);
@@ -214,7 +214,7 @@ class DataDef extends Array{
 	}
 	
 	delete(queryArray) {
-    this.map((r,rIdx) => {
+		this.map((r,rIdx) => {
 			return {i : rIdx, record : r}
 		}).filter(r => {
 			var match = true;
@@ -232,12 +232,11 @@ class DataDef extends Array{
 						break;
 					}
 				}
-				
 			}
 
 			return match;
 		}).forEach(r => {
-      delete this[r['i']];
+			delete this[r['i']];
 		});
 	}
 }
