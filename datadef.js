@@ -4,10 +4,10 @@
   
   Usage:
   
-    //Available data types:  
-	//	DataDef.StringType
-	//	DataDef.NumberType
-	//	DataDef.BooleanType
+    // Available data types:  
+    //	  DataDef.StringType
+    //	  DataDef.NumberType
+    //	  DataDef.BooleanType
 	
     var people = new DataDef({
       "name" : DataDef.StringType,
@@ -33,7 +33,7 @@
       town: "Newton"
     });
 
-    //The following insert will throw a SchemaError exception
+    // The following insert will throw a SchemaError exception
     //      Field type mismatch (age expected number but got string)
     people.insert({
       name:"Joe",
@@ -41,18 +41,21 @@
       town:"Creston"
     });
 
-    //Query using query function (two-dimensional array of field/value pairs)
+    // Query using query function (two-dimensional array of field/value pairs)
     people.query([["age",33],["age",50]])
 
-    //RegEx may be used with both string and non-string fields
+    // RegEx may be used with both string and non-string fields
     people.query([["town",/^N/],["age",/^5[0-9]$/]])
 
-    //Update fields
+    // Update fields
     //    First argument is the same as the query function syntax
     //    Second argument is a object containing updpate field/value pairs
     people.update([["name",/^P/]],{city : "Cincinnati"})
 
-    //Can also query using standard Array functions (filter, map, etc.)
+    // Delete records
+    people.delete([["age",/^[6789][0-9]$/]]);
+
+    // Can also query using standard Array functions (filter, map, etc.)
     people.filter(r => 10 > r['age'] % 30 >= 1);
     people.filter(r => r['town'].match(/^New/)) ;
 */
