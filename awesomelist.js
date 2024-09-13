@@ -1,3 +1,30 @@
+/*
+    AwesomeList - Automate curation of Awesome Lists (https://github.com/sindresorhus/awesome)
+
+    Usage:
+
+        // Instantiate list with description
+        var l = new AwesomeList("This is a test list");
+
+        //Populate lists with topics, sub-topics, and links (no technical limit to depth of sub-topics)
+        l.addTopic("Programming","links about programming");
+        l['Programming'].addTopic("Java","links about Java");
+        l['Programming']['Java'].addLink("Java 1","http://java1.com","Java 1 info");
+        l['Programming']['Java'].addLink("Java 2","http://java2.com","Java 2 info");
+        l['Programming'].addLink("Python 1","http://python.com");
+
+        //Render Markdown
+        var md = l.render();
+        console.log(md);
+
+        > # This is a test lsit  
+        > - Programming  
+        >   - Java  
+        >     - [Java 1](http://java1.com) - Java 1 info  
+        >     - [Java 2](http://java2.com) - Java 2 info  
+        >   - [Python 1](http://python.com)  
+        
+*/
 class AwesomeList {
     constructor(description) {
         this.description = (description) ? description : null;
@@ -59,7 +86,7 @@ class AwesomeList {
             }
         });
 
-        list += "  \n  \n*Powered by [awesomelist.js]()*"
+        list += "  \n  \n*Powered by [awesomelist.js](https://github.com/bng44270/js-tools/blob/main/awesomelist.js)*"
         return list;
     }
 }
