@@ -6,14 +6,14 @@
         // Instantiate list with description
         var l = new AwesomeList("This is a test list");
 
-        //Populate lists with topics, sub-topics, and links (no technical limit to depth of sub-topics)
+        // Populate lists with topics, sub-topics, and links (no technical limit to depth of sub-topics)
         l.addTopic("Programming","links about programming");
         l['Programming'].addTopic("Java","links about Java");
         l['Programming']['Java'].addLink("Java 1","http://java1.com","Java 1 info");
         l['Programming']['Java'].addLink("Java 2","http://java2.com","Java 2 info");
         l['Programming'].addLink("Python 1","http://python.com");
 
-        //Render Markdown
+        // Render Markdown
         var md = l.render();
         console.log(md);
 
@@ -23,7 +23,13 @@
         >     - [Java 1](http://java1.com) - Java 1 info  
         >     - [Java 2](http://java2.com) - Java 2 info  
         >   - [Python 1](http://python.com)  
-        
+
+        // Export JSON text
+        var jsonText = l.export();
+
+        // Import JSON text data
+        var a = new AwesomeList();
+        a.import(jsonText);
 */
 class AwesomeList {
     constructor(description) {
@@ -64,6 +70,10 @@ class AwesomeList {
         });
     }
 
+    export() {
+        return JSON.stringify(this);
+    }
+    
     render(prefix) {
         var listPrefix = (prefix) ? prefix : "";
         var list = "";
