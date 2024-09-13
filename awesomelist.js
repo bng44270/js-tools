@@ -7,6 +7,12 @@
         var l = new AwesomeList("This is a test list");
 
         // Populate lists with topics, sub-topics, and links (no technical limit to depth of sub-topics)
+        //
+        // Function syntax:
+        //    <list/topic>.addTopic("Name","Description");
+        //    <list/topic>.addLink("Name","URL","Description");
+        //
+        // NOTE:  Description is optional for the addLink method
         l.addTopic("Programming","links about programming");
         l['Programming'].addTopic("Java","links about Java");
         l['Programming']['Java'].addLink("Java 1","http://java1.com","Java 1 info");
