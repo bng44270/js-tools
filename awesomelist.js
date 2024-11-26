@@ -1,5 +1,5 @@
 /*
-    AwesomeList - Automate curation of Awesome Lists (https://github.com/sindresorhus/awesome)
+    AwesomeList - Automate curation of Awesome Lists in Markdown format (https://github.com/sindresorhus/awesome)
 
     Usage:
 
