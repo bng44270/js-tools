@@ -15,4 +15,7 @@ class Range extends Array {
       val++;
     }
   }
+  isIn(v) {
+    return (v >= this[0] && v <= this[this.length - 1]);
+  }
 }
