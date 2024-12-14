@@ -4,6 +4,10 @@ usage:
   > var thisRange = new Range(1,6);
   > thisRange
   [1, 2, 3, 4, 5, 6]
+  > thisRange.inIn(3)
+  true
+  > thisRange.isIn(100)
+  false
 */
 
 class Range extends Array {
