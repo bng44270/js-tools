@@ -16,30 +16,46 @@
         var nameValue = data[0].name;
         
 */
-class CsvFile extends Array{
-    constructor(csvtext,delim=',') {
+
+class CsvFile extends Array {
+    constructor(csvtext = '', delim = ',') {
         super();
         this.raw = csvtext;
         this.delimiter = delim;
         this.parseCsv();
     }
- 
+
+    set raw(txt) {
+        this._raw = txt;
+        this.parseCsv();
+    }
+
+    get raw() {
+        return this._raw;
+    }
+
     parseCsv() {
         var fieldNames = [];
-        var lines = this.raw.split('\n');
- 
-        for (var l = 0; l < lines.length; l++) {
-            var fields = lines[l].split(this.delimiter);
- 
-            if (l == 0) {
-                fieldNames = fields;
-            }
-            else {
-                var ob = {};
-                for (var f = 0; f < fields.length; f++) {
-                    ob[fieldNames[f]] = fields[f];
+
+        //Clear existing data
+        this.length = 0;
+
+        if (this.raw.length > 0) {
+            var lines = this.raw.split('\n');
+
+            for (var l = 0; l < lines.length; l++) {
+                var fields = lines[l].split(this.delimiter);
+
+                if (l == 0) {
+                    fieldNames = fields;
                 }
-                this.push(ob);
+                else {
+                    var ob = {};
+                    for (var f = 0; f < fields.length; f++) {
+                        ob[fieldNames[f]] = fields[f];
+                    }
+                    this.push(ob);
+                }
             }
         }
     }
