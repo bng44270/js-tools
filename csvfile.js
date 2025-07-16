@@ -56,13 +56,13 @@ class CsvFile extends Array {
         
         if (this.twodim) {
             for (var l = 0; l < lines.length; l++) {
-                this.push(lines[l].split(this.delimiter));
+                this.push(this.parseRow(lines[l]));
             }
         }
         else {
             if (this.raw.length > 0) {    
                 for (var l = 0; l < lines.length; l++) {
-                    var fields = lines[l].split(this.delimiter);
+                    var fields = this.parseRow(lines[l]);
     
                     if (l == 0) {
                         fieldNames = fields;
@@ -77,5 +77,32 @@ class CsvFile extends Array {
                 }
             }
         }
+    }
+
+    parseRow(rowText) {
+        var row = [];
+        var infield = false;
+        var currentField = '';
+
+        for (var i = 0; i < rowText.length; i++) {
+            var char = rowText[i];
+
+            if (char === '"') {
+                if (infield && rowText[i + 1] === '"') {
+                    currentField += '"';
+                    i++;
+                } else {
+                    infield = !infield;
+                }
+            } else if (char === this.delimiter && !infield) {
+                row.push(currentField);
+                currentField = '';
+            } else {
+                currentField += char;
+            }
+        }
+        row.push(currentField); // Add the last field
+
+        return row;
     }
 }
