@@ -19,7 +19,7 @@ Usage:
 <SCHEMA-OBJECT> - Schema object (same as DataDef)
 <DATA-OBJECT> - Data to pre-populate in object (same as DataDef) - optional
 <LOAD-FUNCTION> - function to exeute when the editor interface loads (requires 1 argument representing the DataDef object) - optional
-<COMMIT-FUNCTION> - function to exeute when the "Commit" button is clicked (requires 1 argument representing the DataDef object) - optional
+<COMMIT-FUNCTION> - function to exeute when the "Commit" button is clicked (requires 1 arguments representing the DataDef object - optional
 
 
 Example:
@@ -63,11 +63,12 @@ class DataDefEditor extends DataDef {
                 super(options.fields);
             }
 
-            this.onCommit = (Object.keys(options).indexOf('onCommit') > -1) ? options.onCommit : function() { };
+            this.onCommit = (Object.keys(options).indexOf('onCommit') > -1) ? options.onCommit : function(d) { };
 
             this.onLoad = (Object.keys(options).indexOf('onLoad') > -1) ? options.onLoad : function() { };
 
             this.TABLEID = id + '_datatable';
+            this.SCHEMAEDITID = id + '_schemaedit';
 
             this.container = document.createElement('div');
             this.container.id = id;
@@ -88,32 +89,193 @@ class DataDefEditor extends DataDef {
         this.container.appendChild(addButton);
 
         var commitButton = document.createElement('button');
-        commitButton.innerText = 'Commit';
+        commitButton.innerText = 'Save';
         commitButton.addEventListener('click',this.commit.bind(this),false);
 
         this.container.appendChild(commitButton);
 
+        var exportBtn = document.createElement('button');
+        exportBtn.innerText = "Export JSON";
+        exportBtn.addEventListener('click',this.exportJson.bind(this),false);
+
+        this.container.appendChild(exportBtn);
+
+        var editSchemaBtn = document.createElement('button');
+        editSchemaBtn.innerText = "Edit Schema";
+        editSchemaBtn.addEventListener('click',this.showSchemaEditor.bind(this),false);
+
+        this.container.appendChild(editSchemaBtn);
+
+        var schemaEditorPane = document.createElement('div');
+        schemaEditorPane.id = this.SCHEMAEDITID;
+        schemaEditorPane.style.display = 'none';
+
+        var schemaEditor = this.buildSchemaEditor();
+        schemaEditorPane.appendChild(schemaEditor );
+
+        this.container.appendChild(schemaEditorPane);
+
         var table = document.createElement('table');
         table.id = this.TABLEID;
+
+        this.buildTableContents().forEach(row => {
+            table.appendChild(row);
+        });
+
+        this.container.appendChild(table);
+    }
+
+    showSchemaEditor() {
+        document.getElementById(this.SCHEMAEDITID).style.display = 'block';
+    }
+
+    buildSchemaEditor() {
+        var schemaContainer = document.createElement('div');
+
+        var fieldListContainer = document.createElement('div');
+
+        Object.keys(this.SCHEMA).forEach(field => {
+            var thisFieldContainer = this.addSchemaField(field,true);
+            fieldListContainer.appendChild(thisFieldContainer);
+        });
+
+        schemaContainer.appendChild(fieldListContainer);
+
+        var addSchemaFieldBtn = document.createElement('button');
+        addSchemaFieldBtn.innerText = "Add Field";
+        addSchemaFieldBtn.onclick = () => {
+            var fieldContainer = this.addSchemaField("New Field",false);
+            fieldListContainer.appendChild(fieldContainer);
+        };
+
+        schemaContainer.appendChild(addSchemaFieldBtn);
+
+        var updateBtn = document.createElement('button');
+        updateBtn.innerText = "Close";
+        updateBtn.onclick = () => {
+            document.getElementById(this.SCHEMAEDITID).style.display = 'none';
+
+            var table = document.getElementById(this.TABLEID);
+
+            while (table.firstChild) {
+                table.removeChild(table.firstChild);
+            }
+
+            this.buildTableContents().forEach(row => {
+                table.appendChild(row);
+            });
+        };
+
+        schemaContainer.appendChild(updateBtn);
+
+        return schemaContainer;
+    }
+
+    addSchemaField(field,readOnly) {
+        var fieldContainer = document.createElement('div');
+
+        var nameId = "schemaname_" + field;
+        var typeId = "schematype_" + field;
+
+        var nameLabel = document.createElement('label');
+        nameLabel.setAttribute('for', nameId);
+        nameLabel.innerText = "Name";
+
+        fieldContainer.appendChild(nameLabel);
+
+        var nameField = document.createElement('input');
+        nameField.type = "text";
+        nameField.id = nameId;
+        nameField.value = field;
+        nameField.readOnly = (readOnly) ? true : false;
+
+        fieldContainer.appendChild(nameField);
+
+        var typeLabel = document.createElement('label');
+        typeLabel.setAttribute('for',typeId);
+        typeLabel.innerText = "Type";
+
+        fieldContainer.appendChild(typeLabel);
+
+        var typeField = document.createElement('select');
+        typeField.id = typeId;
+        typeField.disabled = (readOnly) ? true : false;
+
+        [DataDef.StringType,DataDef.NumberType,DataDef.BooleanType].forEach(t => {
+            var option = document.createElement('option');
+            option.value = t;
+            option.innerText = t;
+
+            typeField.appendChild(option);
+        });
+
+        typeField.value = (Object.keys(this.SCHEMA).indexOf(field) > -1) ? this.SCHEMA[field] : DataDef.StringType;
+
+        fieldContainer.appendChild(typeField);
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.innerText = "Delete";
+        deleteBtn.onclick = () => {
+            this.deleteField(field);
+
+            fieldContainer.remove();
+        };
+
+        fieldContainer.appendChild(deleteBtn);
+
+        if (!readOnly) {
+            var saveBtn = document.createElement('button');
+            saveBtn.innerText = "Save";
+            saveBtn.onclick = () => {
+                var fieldName = document.getElementById(nameId);
+                var fieldType = document.getElementById(typeId);
+
+                if (Object.keys(this.SCHEMA).indexOf(fieldName) == -1) {
+                    this.addField(fieldName.value,fieldType.value);
+                    typeField.disabled = true;
+                    nameField.readOnly = true;
+                    saveBtn.style.display = "none";
+                }
+            };
+
+            fieldContainer.appendChild(saveBtn);
+        }
+
+        return fieldContainer;
+    }
+
+    buildTableContents() {
+        var returnRows = [];
 
         var tableHeader = document.createElement('tr');
 
         Object.keys(this.SCHEMA).forEach(thisField => {
-            var thisColumn = document.createElement('td');
+            var thisColumn = document.createElement('th');
             thisColumn.innerText = thisField;
-            thisColumn.style.fontWeight = 'bold';
             tableHeader.appendChild(thisColumn);
         });
 
-        table.appendChild(tableHeader);
+        returnRows.push(tableHeader);
 
         this.forEach(record => {
             var newRow = this.addRow(record);
 
-            table.appendChild(newRow);
+            returnRows.push(newRow);
         });
 
-        this.container.appendChild(table);
+        return returnRows;
+    }
+
+    exportJson() {
+        var jsonText = JSON.stringify(this);
+
+        var blob = new Blob([jsonText],{ type : 'application/json' });
+
+        var link = document.createElement('a');
+        link.target = "_blank";
+        link.href = URL.createObjectURL(blob);
+        link.download = "datadef.json";
+        link.click();
     }
 
     commit() {
