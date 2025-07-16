@@ -5,82 +5,160 @@ Simple Way to display/edit a two dimensional array
 Usage:
 
     var data = [['a','b','c'],['d','e','f']];
-    var grid = new DataGrid(data,{
-        parent : 'sectionid'
-        onCommit : function(d) {
+    var grid = new DataGrid('gridid',{
+        data : [<DATA-ARRAY]>,          //Data array
+        onCommit : function(d) {        //Run this function on commit
             var j = JSON.stringify(d);
             console.log(j);
-        }
-    });
+        },
+        header : true                  //Is first row the header? (default is false)
+    })
 
-The second argument is an object containing options for the data grid.
-This argument, along with both of the options within the object, are optional.
+    document.body.appendChild(grid);
 
-    parent - the ID of the DOM element to place the data grid inside
-    onCommit - the function to execute when the "Save" button is clicked.  The function accepts the data array as an argument.
+The second argument is the function to execute when the "Save" button is clicked.  The function accepts the data array as an argument.  (Optional)
 
 Stylesheets may be used to add style to the <tr> and <td> HTML tags along with the following classes:
 
-    datadisp - non-editable data display
-    dataedit - data editing input field
+    grid-container - parent container of table
+    grid-table - table
+    grid-datarow - table rows
+    grid-datacell - table row cell
+    grid-datadisp - non-editable data display
+    grid-dataedit - data editing input field
 
 */
-class DataGrid {
-    constructor(data,options={}) {
-        if (this.validData(data)) {
-            this.data = data;
+class DataGrid extends Array {
+    constructor(id,options) {
+        super();
+        if (Object.keys(options).indexOf('data') > -1) {
+            if (this.validData(options.data)) {
+                options.data.forEach(r => {
+                    this.push(r);
+                });
 
-            this.rows = data.length;
-            this.cols = data[0].length;
+                this.rows = this.length;
+                this.cols = this[0].length;
 
-            this.parentId = (Object.keys(options).indexOf('parent') > -1) ? options['parent'] : '';
+                this.id = id;
 
-            this.buildGrid();
+                this.onCommit = (Object.keys(options).indexOf('onCommit') > -1) ? options.onCommit : function(d) { };
 
-            this.populateGrid();
+                this.headerRow = (Object.keys(options).indexOf('header') > -1) ? options.header : false;
 
-            this.onCommit = (Object.keys(options).indexOf('onCommit') > -1) ? options['onCommit'] : function(d) { };
+                var view = this.buildGrid();
+
+                return this.populateGrid(view);
+            }
         }
     }
 
     buildGrid() {
         var tableDisp = document.createElement('div');
-        var dataTable = document.createElement('table');
+        tableDisp.setAttribute('class','grid-container');
 
-        this.data.forEach((row,rowIdx) => {
+        var saveBtn = document.createElement('button');
+        saveBtn.innerText = "Save";
+        saveBtn.addEventListener('click',this.updateData.bind(this),false);
+        tableDisp.appendChild(saveBtn);
+
+        var exportBtn = document.createElement('button');
+        exportBtn.innerText = 'Export CSV';
+        exportBtn.addEventListener('click',this.exportCsv.bind(this),false);
+        tableDisp.appendChild(exportBtn);
+
+        var filterTxt = document.createElement('input');
+        filterTxt.type = 'text';
+        filterTxt.id = this.id + '_searchtext';
+        filterTxt.value = "Type filter text here";
+        filterTxt.style.color = "#888888";
+        filterTxt.onclick = function() {
+            if (filterTxt.value == "Type filter text here") {
+                filterTxt.value = "";
+                filterTxt.style.color = "#000000";
+            }
+        };
+        filterTxt.onblur = function() {
+            if (filterTxt.value == "") {
+                filterTxt.value = "Type filter text here";
+                filterTxt.style.color = "#888888";
+            }
+        };
+        filterTxt.onkeyup = (e) => {
+            var searchText = filterTxt.value;
+
+            this.runFilter(searchText)
+
+            document.getElementById('recordcountdisp').innerText = (searchText == "") ? "" : "Showing " + filteredRecords.length.toString() + " records";
+
+            if (searchText.length  > 0) {
+                const newParams = new URLSearchParams({ search: searchText });
+                window.history.pushState({}, "", "?" + newParams.toString());
+            }
+            else {
+                window.history.pushState({}, "", "?");
+            }
+
+        };
+        tableDisp.appendChild(filterTxt);
+
+        var recordCount = document.createElement('span');
+        recordCount.id = 'recordcountdisp';
+        recordCount.style.marginLeft = "50px";
+        tableDisp.appendChild(recordCount);
+
+        var dataTable = document.createElement('table');
+        dataTable.setAttribute('class','grid-table');
+
+        this.forEach((row,rowIdx) => {
             var dataRow = document.createElement('tr');
+            dataRow.setAttribute('class','grid-datarow');
 
             row.forEach((cell,cellIdx) => {
-                var dataCell = document.createElement('td');
+                var cellType = (rowIdx == 0 && this.headerRow) ? 'th' : 'td';
+                var dataCell = document.createElement(cellType);
+                dataCell.setAttribute('class','grid-datacell');
 
                 var disp = document.createElement('span');
-                disp.setAttribute('class','datadisp');
+                disp.setAttribute('class','grid-datadisp');
                 disp.id = 'datadisp_' + rowIdx.toString() + '_' + cellIdx.toString();
                 disp.style.display = 'inline';
-                disp.ondblclick = function() {
-                    var cellId = this.id.replace(/^datadisp/,'dataedit');
-                    this.style.display = 'none';
-                    var cell = document.getElementById(cellId);
-                    cell.style.display = 'inline';
-                    cell.value = this.innerText;
-                };
+                if (cellType == 'td') {
+                    dataCell.ondblclick = function() {
+                        var cellId = disp.id.replace(/^datadisp/,'dataedit');
+                        disp.style.display = 'none';
+                        var cell = document.getElementById(cellId);
+                        cell.style.display = 'inline';
+                        cell.value = disp.innerText;
+                        cell.focus();
+                        cell.select();
+                    };
+                }
                 dataCell.appendChild(disp);
 
-                var edit = document.createElement('input');
-                edit.type = 'text';
-                edit.setAttribute('class','dataedit');
-                edit.id = 'dataedit_' + rowIdx.toString() + '_' + cellIdx.toString();
-                edit.style.display = 'none';
-                edit.onkeyup = function(e) {
-                    if (e.code == 'Enter') {
-                        var dispId = this.id.replace(/^dataedit/,'datadisp');
-                        this.style.display = 'none';
-                        var disp = document.getElementById(dispId);
-                        disp.style.display = 'inline';
-                        disp.innerText = this.value;
-                    }
-                };
-                dataCell.appendChild(edit);
+                if (cellType == 'td') {
+                    var edit = document.createElement('input');
+                    edit.type = 'text';
+                    edit.setAttribute('class','grid-dataedit');
+                    edit.id = 'dataedit_' + rowIdx.toString() + '_' + cellIdx.toString();
+                    edit.style.display = 'none';
+                    edit.onkeyup = function(e) {
+                        if (e.code == 'Enter') {
+                            var dispId = this.id.replace(/^dataedit/,'datadisp');
+                            this.style.display = 'none';
+                            var disp = document.getElementById(dispId);
+                            disp.style.display = 'inline';
+                            disp.innerText = this.value;
+                        }
+                        else if (e.code == 'Escape') {
+                            var dispId = this.id.replace(/^dataedit/,'datadisp');
+                            this.style.display = 'none';
+                            var disp = document.getElementById(dispId);
+                            disp.style.display = 'inline';
+                        }
+                    };
+                    dataCell.appendChild(edit);
+                }
 
                 dataRow.appendChild(dataCell);
             });
@@ -90,38 +168,68 @@ class DataGrid {
 
         tableDisp.appendChild(dataTable);
 
-        var saveBtn = document.createElement('button');
-        saveBtn.innerText = "Save";
-        saveBtn.addEventListener('click',this.updateData.bind(this),false);
-        tableDisp.appendChild(saveBtn);
+        return tableDisp;
+    }
 
+    runFilter(searchText) {
+        [...(document.body.querySelectorAll('.grid-datarow'))].forEach(e => {
+            e.style.display = 'none';
+        });
 
-        if (this.parentId == '') {
-            document.body.appendChild(tableDisp);
-        }
-        else {
-            document.getElemetById(this.parentId).appendChild(tableDisp);
-        }
+        document.body.querySelectorAll('.grid-datarow')[0].style.display = 'table-row';
+
+        var filteredRecords = [...(document.body.querySelector('.grid-table').querySelectorAll('.grid-datarow'))].filter(e => {
+            var re = new RegExp(searchText,'i');
+            return e.innerText.toString().match(re);
+        });
+
+        filteredRecords.forEach(e => {
+            e.style.display = 'table-row';
+        });
+    }
+
+    exportCsv() {
+        var csvText = this.map(row => {
+            return row.map(cell => {
+                return '"' + cell + '"'
+            }).join(',');
+        });
+
+        var blob = new Blob([csvText], { type : 'text/csv' });
+
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "gridview.csv";
+        link.click();
     }
 
     updateData() {
-        this.data.forEach((row,rowIdx) => {
+        this.forEach((row,rowIdx) => {
             row.forEach((cell,cellIdx) => {
                 var cellId = 'datadisp_' + rowIdx.toString() + '_' + cellIdx.toString();
-                this.data[rowIdx][cellIdx] = document.getElementById(cellId).innerText;
+                this[rowIdx][cellIdx] = document.getElementById(cellId).innerText;
             });
         });
 
-        this.onCommit(this.data);
+        this.onCommit(this);
     }
 
-    populateGrid() {
-        this.data.forEach((row,rowIdx) => {
+    populateGrid(dataView) {
+        this.forEach((row,rowIdx) => {
             row.forEach((cell,cellIdx) => {
                 var dispId = 'datadisp_' + rowIdx.toString() + '_' + cellIdx.toString();
-                document.getElementById(dispId).innerText = cell.toString();
+                dataView.querySelector('#' + dispId).innerText = cell.toString();
             });
         });
+
+        location.search.toString().replace(/^\?/,'').split('&').forEach(pair => {
+            var kv = pair.split('=');
+            if (kv[0] == 'search' && kv.length == 2) {
+                document.getElementById(this.id + '_searchtext').value = decodeURIComponent(kv[1]);
+            }
+        });
+
+        return dataView;
     }
 
     validData(d) {
