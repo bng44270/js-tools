@@ -1,4 +1,6 @@
 /*
+  NOTE:  these functions have been adapted into the datadef.js library
+
   Functions for mapipulating an array of object with a common schema
 
   Usage:
