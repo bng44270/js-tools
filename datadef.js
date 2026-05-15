@@ -4,60 +4,62 @@
 
   Usage:
 
-    // Available data types:
-    //	  DataDef.StringType
-    //	  DataDef.NumberType
-    //	  DataDef.BooleanType
+	// Available data types:
+	//	  DataDef.StringType
+	//	  DataDef.NumberType
+	//	  DataDef.BooleanType
 
-    var people = new DataDef({
-      "name" : DataDef.StringType,
-      "age" : DataDef.NumberType,
-      "town" : DataDef.StringType
-    });
+	var people = new DataDef({
+	  "name" : DataDef.StringType,
+	  "age" : DataDef.NumberType,
+	  "town" : DataDef.StringType
+	});
 
-    people.insert({
-      name: "Bob",
-      age: 30,
-      town: "New York"
-    });
+	people.insert({
+	  name: "Bob",
+	  age: 30,
+	  town: "New York"
+	});
 
-    people.insert({
-      name: "Jim",
-      age: 33,
-      town: "Chicago"
-    });
+	people.insert({
+	  name: "Jim",
+	  age: 33,
+	  town: "Chicago"
+	});
 
-    people.insert({
-      name:"Pete",
-      age:50,
-      town: "Newton"
-    });
+	people.insert({
+	  name:"Pete",
+	  age:50,
+	  town: "Newton"
+	});
 
-    // The following insert will throw a SchemaError exception
-    //      Field type mismatch (age expected number but got string)
-    people.insert({
-      name:"Joe",
-      age:"43",
-      town:"Creston"
-    });
+	// The following insert will throw a SchemaError exception
+	//      Field type mismatch (age expected number but got string)
+	people.insert({
+	  name:"Joe",
+	  age:"43",
+	  town:"Creston"
+	});
 
-    // Query using query function (two-dimensional array of field/value pairs)
-    people.query([["age",33],["age",50]])
+	// Query using query function (two-dimensional array of field/value pairs)
+	people.query([["age",33],["age",50]])
 
-    // RegEx may be used with both string and non-string fields
-    people.query([["town",/^N/],["age",/^5[0-9]$/]])
+	// RegEx may be used with both string and non-string fields
+	people.query([["town",/^N/],["age",/^5[0-9]$/]])
 
-    // Update fields
-    //    First argument is the same as the query function syntax
-    //    Second argument is a object containing updpate field/value pairs
-    people.update([["name",/^P/]],{city : "Cincinnati"})
+	// Update fields
+	//    First argument is the same as the query function syntax
+	//    Second argument is a object containing updpate field/value pairs
+	people.update([["name",/^P/]],{city : "Cincinnati"})
 
-    // Delete records
-    people.delete([["age",/^[6789][0-9]$/]]);
+	// Delete records
+	people.delete([["age",/^[6789][0-9]$/]]);
 
-    // Can also query using standard Array functions (filter, map, etc.)
-    people.filter(r => 10 > r['age'] % 30 >= 1);
-    people.filter(r => r['town'].match(/^New/)) ;
+	// Can also query using standard Array functions (filter, map, etc.)
+	people.filter(r => 10 > r['age'] % 30 >= 1);
+	people.filter(r => r['town'].match(/^New/)) ;
+
+	See comments below for more robust querying options
 */
 
 class SchemaError extends Error {
@@ -74,12 +76,12 @@ class DataError extends Error {
 	}
 }
 
-class DataDef extends Array{
-	static get StringType() { return  'string'; }
+class DataDef extends Array {
+	static get StringType() { return 'string'; }
 	static get NumberType() { return 'number'; }
 	static get BooleanType() { return 'boolean'; }
 
-	constructor(fields,data) {
+	constructor(fields, data) {
 		super();
 
 		this.setSchema(fields);
@@ -93,21 +95,21 @@ class DataDef extends Array{
 		this.SCHEMA = {};
 
 		fieldNames.forEach(f => {
-			this.addField(f,fields[f]);
+			this.addField(f, fields[f]);
 		});
 	}
 
-	addField(field,type) {
+	addField(field, type) {
 		var fieldExists = Object.keys(this.SCHEMA).indexOf(field) > -1;
 
 		if (fieldExists) {
 			throw new SchemaError("Field already exists (" + field + ")");
 		}
 		else {
-			var fieldTypes = [DataDef.NumberType,DataDef.StringType,DataDef.BooleanType];
+			var fieldTypes = [DataDef.NumberType, DataDef.StringType, DataDef.BooleanType];
 
 			if (fieldTypes.indexOf(type) == -1) {
-				throw new SchemaError("Unknown data type (" + fields[fieldNames[i]]  + ")");
+				throw new SchemaError("Unknown data type (" + fields[fieldNames[i]] + ")");
 			}
 
 			this.SCHEMA[field] = type;
@@ -164,9 +166,9 @@ class DataDef extends Array{
 		});
 	}
 
-	update(queryArray,updateMap) {
-		this.map((r,rIdx) => {
-			return {i : rIdx, record : r}
+	update(queryArray, updateMap) {
+		this.map((r, rIdx) => {
+			return { i: rIdx, record: r }
 		}).filter(r => {
 			var match = true;
 
@@ -202,14 +204,14 @@ class DataDef extends Array{
 		Object.keys(this.SCHEMA).filter(f => (fields.indexOf(f) == -1) ? true : false).forEach(f => {
 			record[f] = null;
 		});
-
+		
 		for (var i = 0; i < fields.length; i++) {
 			if (Object.keys(this.SCHEMA).indexOf(fields[i]) == -1) {
-				throw new SchemaError("Field not present in schema (" + fields[i] +")");
+				throw new SchemaError("Field not present in schema (" + fields[i] + ")");
 			}
 
-			if (typeof(record[fields[i]]) != this.SCHEMA[fields[i]]) {
-				throw new SchemaError("Field type mismatch (" + fields[i] + " expected " + this.SCHEMA[fields[i]] + " but got " + typeof(record[fields[i]]) + ")");
+			if (typeof (record[fields[i]]) != this.SCHEMA[fields[i]]) {
+				throw new SchemaError("Field type mismatch (" + fields[i] + " expected " + this.SCHEMA[fields[i]] + " but got " + typeof (record[fields[i]]) + ")");
 			}
 		}
 
@@ -221,8 +223,8 @@ class DataDef extends Array{
 	}
 
 	delete(queryArray) {
-		this.map((r,rIdx) => {
-			return {i : rIdx, record : r}
+		this.map((r, rIdx) => {
+			return { i: rIdx, record: r }
 		}).filter(r => {
 			var match = true;
 
@@ -245,5 +247,149 @@ class DataDef extends Array{
 		}).forEach(r => {
 			delete this[r['i']];
 		});
+	}
+
+	validateFields(field) {
+		if (typeof field == 'string') {
+			if (Object.keys(this.SCHEMA).indexOf(field) == -1) {
+				throw new SchemaError("Field not found (" + field + ")");
+			}
+		}
+		else if (typeof field == 'object') {
+			var valid = true;
+			field.forEach(f => {
+				this.validateFields(f);
+			});
+		}
+	}
+
+	/*
+	These functions are used for querying.
+
+	For instance, if you have an instance of DataDef (below named data),
+	it would work as follows:
+
+		var incomeOfRetiredJimsOver60 = data.whereLike("name","Jim")
+									.whereGreaterThan("age",60)
+									.whereIs("retired",false)
+									.select('income');
+		
+	In this example the 'incomeOfRetiredJimsOver60' variable will
+	be a instance of DataDef containing a subset of the data
+	corresponding to the modifier methods used.
+
+	Available modifier methods
+
+		- select(field1, field2, ...) - select one or more fields to return
+
+		- whereIs(field,value)			}
+		- whereIsNot(field,value)		}
+		- whereStartsWith(field,value)	} all data types
+		- whereEndsWith(field,value)	} 
+
+		- whereLike(field,value)		}  all data types, value can be string or RegExp
+		- whereNotLike(field,value)		}
+
+		- whereGreaterThan(field, value)		}
+		- whereGreaterThanOrEqual(field,value)	}
+		- whereLessThan(field,value)			} numbers only
+		- whereLessThanOrEqual(field,value)		}
+	*/
+	select(...fieldList) {
+		this.validateFields(fieldList);
+
+		return new DataDef(this.SCHEMA, this.map(row => {
+			var ob = {};
+			fieldList.forEach(f => {
+				ob[f] = row[f];
+			});
+			return ob;
+		}));
+	};
+
+	whereIs(field, value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return (row[field] == value) ? true : false;
+		}));
+	}
+
+	whereIsNot(field, value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return (row[field] != value) ? true : false;
+		}));
+	}
+
+	whereGreaterThan(field,value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return parseFloat(row[field]) > parseFloat(value);
+		}));
+	}
+
+	whereLessThan(field,value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return parseFloat(row[field]) < parseFloat(value);
+		}));
+	}
+
+	whereGreaterThanOrEqual(field,value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return parseFloat(row[field]) >= parseFloat(value);
+		}));
+	}
+
+	whereLessThanOrEqual(field,value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return parseFloat(row[field]) <= parseFloat(value);
+		}));
+	}
+
+	whereStartsWith(field, value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return row[field].toString().startsWith(value);
+		}));
+	}
+
+	whereEndsWith(field, value) {
+		this.validateFields(field);
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return row[field].toString().endsWith(value);
+		}));
+	}
+
+	whereLike(field, pattern) {
+		this.validateFields(field);
+
+		var objectType = pattern.constructor.name;
+		var usePattern = (objectType == 'RegExp') ? pattern : pattern.toString();
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return (row[field].toString().match(usePattern)) ? true : false;
+		}));
+	}
+
+	whereNotLike(field, pattern) {
+		this.validateFields(field);
+
+		var objectType = pattern.constructor.name;
+		var usePattern = (objectType == 'RegExp') ? pattern : pattern.toString();
+
+		return new DataDef(this.SCHEMA, this.filter(row => {
+			return (!(row[field].toString().match(usePattern))) ? true : false;
+		}));
 	}
 }
